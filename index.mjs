@@ -1,29 +1,38 @@
 import { initialize } from "zokrates-js";
 
-initialize().then((zokratesProvider) => {
-  const source = "def main(private field a) -> field { return a + a; }";
+async function main() {
+  try {
+    const zokratesProvider = await initialize();
 
-  // compilation
-  const artifacts = zokratesProvider.compile(source);
+    // Zokrates source code
+    const source = `def main(private field x, private field y) -> bool { return x == y; }`;
 
-  // computation
-  const { witness, output } = zokratesProvider.computeWitness(artifacts, ["3"]);
-  console.log("🚀 ~ file: index.mjs:11 ~ initialize ~ output:", output);
+    // Compilation
+    const artifacts = await zokratesProvider.compile(source); // Add 'await' here
 
-  // run setup
-  const keypair = zokratesProvider.setup(artifacts.program);
+    // Computation
+    const { witness, output } = await zokratesProvider.computeWitness(
+      artifacts,
+      ["1694350122", "1694350122"]
+    );
 
-  // generate proof
-  const proof = zokratesProvider.generateProof(
-    artifacts.program,
-    witness,
-    keypair.pk
-  );
+    console.log("Output:", output);
 
-  // export solidity verifier
-  const verifier = zokratesProvider.exportSolidityVerifier(keypair.vk);
+    // Run setup
+    const keypair = zokratesProvider.setup(artifacts.program);
 
-  // or verify off-chain
-  const isVerified = zokratesProvider.verify(keypair.vk, proof);
-  console.log("🚀 ~ file: index.mjs:28 ~ initialize ~ isVerified:", isVerified);
-});
+    // Generate proof
+    const proof = await zokratesProvider.generateProof(
+      // Add 'await' here
+      artifacts.program,
+      witness,
+      keypair.pk
+    );
+    // Or verify off-chain
+    const isVerified = await zokratesProvider.verify(keypair.vk, proof); // Add 'await' here
+  } catch (error) {
+    console.error("An error occurred:", error);
+  }
+}
+
+main();
